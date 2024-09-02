@@ -9,25 +9,33 @@
 #define IN2 27                            // Motor driver direction pin 2
 #define Encoder_Pulse_per_revolution 700  // Encoder pulses per revolution
 
+#define LED_Pin 2
 volatile long encoderCount = 0;    // To count the encoder pulses
 long previousEncoderCount = 0;     // To store the previous encoder count
 unsigned long previousMillis = 0;  // To store the previous time
 
 const long interval = 1000;        // Time interval to calculate RPM (1 second)
-double Setpoint = 80.0;   // Target RPM
-double Input;             // Current RPM
-double Output; 
+double setPoint = 80.0;   // Target RPM / what RPM to set into 
+double Input;             
+double Output;  
 double Kp = 0.265, Ki = 0.125, Kd = 0.125;
 //PID CONTROLLER
-PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
+PID myPID(&Input, &Output, &setPoint, Kp, Ki, Kd, DIRECT);
 
-const char ssid [] = "skibidi network name";
+const char ssid [] = "Macquarie OneNet";
 const char password [] = "skibidi password name";
+
+unsigned long timeFreeze = 0;
 
 void setup() {
   
   Serial.begin(9600);
+
   WiFi.begin(ssid,password);
+  while(WiFi.status() != WL_CONNECTED){
+    serial.print(".");
+  }
+  serial.print("WiFi connected!");
 
   //setting pin for OUTPUT
   pinMode(IN1, OUTPUT);
@@ -48,7 +56,6 @@ void setup() {
   myPID.SetSampleTime(interval);  // Set the sample time to the interval (in ms)
 }
 
-}
 
 void setMotor(int direction, int PWM_Value) { 
 
@@ -61,6 +68,7 @@ void setMotor(int direction, int PWM_Value) {
   }
   analogWrite(Motor_Driver_PWM, PWM_Value);
 }
+
 void Handle_Encoder() {
   if (digitalRead(Encoder_A_Out) > digitalRead(Encoder_B_Out)) {
     encoderCount++;
@@ -69,14 +77,7 @@ void Handle_Encoder() {
   }
 
 }
-
-void loop() {
-    unsigned long currentMillis = millis();
-  // Calculate RPM every second
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-
-    // Calculate RPM using the formula
+void calculateDirectionalRPM(){ // wrong code
     Input = (encoderCount * 60.0) / Encoder_Pulse_per_revolution;
 
     Serial.print("RPM OF MOTOR = ");
@@ -87,8 +88,6 @@ void loop() {
     
     // Set motor speed using PID output
     setMotor(1, Output);
-
-
 
       if (encoderCount > 0) {
         Serial.print("Direction of motor is ANTI CLOCKWISE ");
@@ -101,7 +100,47 @@ void loop() {
         Serial.print("      ----->");
       }
     encoderCount = 0;
+}
+
+
+// Function to accelerate motor (for simplicity, a placeholder)
+void accelerate() {
+   setPoint = 40.0;
+   myPID.Compute();
+   setMotor(1,setPoint);
+}
+
+// Function to decelerate motor (for simplicity, a placeholder)
+void decelerate() {
+   setPoint = 0.0;
+   myPID.Compute();
+   setMotor(1,setPoint);
+}
+
+
+void loop() {
+  unsigned long currentMillis = millis();
+
+  if(Input == 0.0) digitalWrite(2,LOW); // when RPM is 0
+  // Calculate RPM every second
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    calculateDirectionalRPM();
   }
+
+  if(currentMillis <= 30000){
+    timeFreeze = currentMillis;
+    if(currentMillis <= timeFreeze+5000 && currentMillis < 30000)
+      accelerate();
+
+    if(currentMillis >= 25000){
+      decelerate();
+    }
+
+    myPID.Compute();
+    setMotor(1,Output);
+  }
+
 }
 
 

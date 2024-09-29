@@ -6,12 +6,11 @@ start_time = time.monotonic()
 elapsed_time = time.monotonic() - start_time
 
 # Configuration
-UDP_IP = "10.20.30.1"  # Listen on all interfaces
+UDP_IP = "10.20.30.1"  # Listen on this IP
 UDP_PORT = 2001      # Port to listen on
-SEND_IP = "10.20.30.101"  # IP to send messages to
-SEND_PORT = 3001     # Port to send messages to
+SEND_IP = "10.20.30.101"  # IP to send messages to Bladerunner
+SEND_PORT = 3001     # Port to send messages to Bladerunner
 
-all_Clear = False
 
 BR_State = ""
 

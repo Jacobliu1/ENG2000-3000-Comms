@@ -50,7 +50,9 @@ def handle_message(json_data):
             "client_id": "BR01",
             "timestamp": str(elapsed_time)
         }
-    if message == "STAT":
+        send_response(response)
+    
+    elif message == "STAT":
         response = {
             "client_type": "ccp",
             "message": "STAT",
@@ -59,10 +61,9 @@ def handle_message(json_data):
             "status" : BR_State,
             "station_id": current_station_id
             }
+        send_response(response)
         
-    
-
-    send_response(response)
+   
 
 def send_response(response):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP

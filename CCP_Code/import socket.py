@@ -7,14 +7,14 @@ elapsed_time = time.monotonic() - start_time
 
 # Configuration
 UDP_IP = "10.20.30.1"  # Listen on this IP
-UDP_PORT = 2001      # Port to listen on
+UDP_PORT = 2000      # Port to listen on
 SEND_IP = "10.20.30.101"  # IP to send messages to Bladerunner
 SEND_PORT = 3001     # Port to send messages to Bladerunner
 
 
-BR_State = ""
+status = ""
 
-current_station_id = ""
+
 # Function to listen for UDP packets and handle JSON data
 def listen_udp():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
@@ -50,7 +50,7 @@ def handle_message(json_data):
             "client_id": "BR01",
             "timestamp": str(elapsed_time)
         }
-        send_response(response)
+        send_response_toMCP(response)
     
     elif message == "STAT":
         response = {
@@ -58,14 +58,19 @@ def handle_message(json_data):
             "message": "STAT",
             "client_id": "BR01",
             "timestamp": str(elapsed_time),
-            "status" : BR_State,
-            "station_id": current_station_id
+            "status" : status
             }
-        send_response(response)
+        send_response_toMCP(response)
         
    
 
-def send_response(response):
+def send_response_toMCP(response):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
+    response_json = json.dumps(response).encode('utf-8')  # Convert the response to JSON bytes
+    sock.sendto(response_json, (UDP_IP, UDP_PORT))  # Send response to specified IP and port
+    print(f"Sent response to {UDP_IP}:{UDP_PORT}: {response}")
+
+def send_response_toCarriage(response):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
     response_json = json.dumps(response).encode('utf-8')  # Convert the response to JSON bytes
     sock.sendto(response_json, (SEND_IP, SEND_PORT))  # Send response to specified IP and port

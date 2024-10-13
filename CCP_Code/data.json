@@ -4,7 +4,7 @@
     "client_id": "string",
     "timestamp": "integer",
     "action": "string (optional)",
-    "status": "string (optional)",
-    "station_id": "string (optional)"
+    "status": "string (optional)"
+    
 
 }

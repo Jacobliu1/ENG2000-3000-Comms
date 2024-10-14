@@ -8,9 +8,14 @@ UDP_PORT = 2000      # Port to listen on
 SEND_IP = "10.20.30.101"  # IP to send messages to Bladerunner
 SEND_PORT = 3001     # Port to send messages to Bladerunner
 
-Status = ["STOPC, STOPO, FSLOWC, FFASTC, RSLOWC,ERR,OFLN"]
+Status = ["STOPC", "STOPO", "FSLOWC", "FFASTC", "RSLOWC", "ERR", "OFLN"]
 
-sequenceCounting = 1
+client_type = ""
+client_id = ""
+sequence_number = ""
+action = ""
+status = ""
+br_id = ""
 
 # Function to listen for UDP packets and handle JSON data
 def listen_MCP():
@@ -44,46 +49,60 @@ def listen_Carriage():
             print(f"Received invalid UTF-8 data from {addr}: {data}")
 
 def handle_message_fromMCP(json_data):
-    # Extract fields from the JSON data\
-
+    # Extract fields from the JSON data
     statusToSend = ""
 
     client_type = json_data.get("client_type")
     message = json_data.get("message")
     client_id = json_data.get("client_id")
     sequence_number = json_data.get("sequence_number")
+    action = json_data.get("action")
+    status = json_data.get("status")
+    br_id = json_data.get("br_id")
 
     if client_id != "BR01":
-        statusToSend = Status[5]
-    
+        statusToSend = "ERR"
 
     # intial message
     if message == "AKIN":
-        send_response_toCarriage("AKIN")
+        print("Successful Connection, Begin Running")
     
-    elif message == "STAT":
-        response = {
-            "client_type": "ccp",
-            "message": "STAT",
-            "client_id": "BR01",
-            "sequence_number":sequence_number+1 ,
-            "status" : statusToSend
-            }
-        send_response_toMCP(response)
-    #other responses
+    elif message == "STRQ":
+        send_response_toCarriage("STRQ")
+    
+    elif message == "EXEC":
+        send_response_toCarriage("EXEC")
+
+    elif message == "AKST":
+        print("status acknowledgement recieved")
+
         
 def handle_message_fromCarriage(data):
     #extract string
-
+    num = 0
+    currentStatus = Status[num]
     if data == "AKIN":
         response = {
             "client_type": "CCP",
             "message": "CCIN",
             "client_id": "BR01",
-            "sequence_number": 0
+            "sequence_number": sequence_number+1
         }
         send_response_toMCP(response)
-    #Other functions...
+
+    elif data == "STAT":
+        
+        response = {
+            "client_type": "CCP",
+            "message": "STAT",
+            "client_id": "BR01",
+            "sequence_number": sequence_number+1,
+            "status": currentStatus
+        }
+    
+
+
+
     
     
 def send_response_toMCP(response):

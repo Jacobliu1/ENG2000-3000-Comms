@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include <PID_v1.h>
-
+#include <FastLED.h>
 
 #define Encoder_A_Out 34                  // Encoder output A connected to interrupt pin 2
 #define Encoder_B_Out 35                  // Encoder output B connected to interrupt pin 3
@@ -8,12 +8,35 @@
 #define IN1 25                            // Motor driver direction pin 1
 #define IN2 27                            // Motor driver direction pin 2
 #define Encoder_Pulse_per_revolution 700  // Encoder pulses per revolution
+#define DOOR_SERVO      12
 
-#define LED_Pin 2
+#define PROX_BACK       21
+#define PROX_FRONT      22
+
+#define IR_FRONT        14
+#define IR_BACK         26
+
+#define LEDS_PIN             2
+#define LEDS_COUNT           4
+#define LEDS_CHANNEL         2
+#define BRIGHTNESS          10
+
 volatile long encoderCount = 0;    // To count the encoder pulses
 long previousEncoderCount = 0;     // To store the previous encoder count
-// no more time
+unsigned long previousMillis = 0;  // To store the previous time
+int sensitivity = 5;
+const long interval = 100;        // Time interval to calculate RPM (0.1 second)
+double setpoint = 0.0;   // Target RPM
+double Input;             // Current RPM
+double Output;
+Freenove_ESP32_WS2812 strip = Freenove_ESP32_WS2812(LEDS_COUNT, LEDS_PIN, LEDS_CHANNEL, TYPE_GRB);
 
+#define DA_SENSE        34
+
+
+
+#define DATA_PIN 19
+CRGB leds[1]; //changeable
 
 const long interval = 1000;        // Time interval to calculate RPM (1 second)
 double setPoint = 80.0;   // Target RPM / what RPM to set into 
@@ -23,8 +46,8 @@ double Kp = 0.265, Ki = 0.125, Kd = 0.125;
 //PID CONTROLLER
 PID myPID(&Input, &Output, &setPoint, Kp, Ki, Kd, DIRECT);
 
-const char ssid [] = "Macquarie OneNet";
-const char password [] = ""
+#define WIFI_SSID       "ENGG2K3K"
+#define WIFI_PASSWORD   ""
 
 
 void setup() {
@@ -68,7 +91,6 @@ void setMotor(int direction, int PWM_Value) {
   }
   
 }
-
 void Handle_Encoder() {
  // code Motions will provide
 }
@@ -93,6 +115,39 @@ void decelerate() {
   runMotor(15)
   runMotor(10)
   runMotor(5)
+}
+
+void stopped() {
+  leds[0] = CRGB::Green;
+  fastLED.show();
+}
+
+void missed() {
+  fastLED.clear();
+}
+
+void dcBlink() {
+  EVERY_N_MILLISECONDS(500) {
+    s = !s;
+    if (s) {
+      leds[0] = CRGB::LightYellow;
+    } else {
+      leds[0] = CRGB::Black;
+    }
+    FastLED.show();
+  }
+}
+
+void esBlink() {
+  EVERY_N_MILLISECONDS(1000) {
+    s = !s;
+    if (s) {
+      leds[0] = CRGB::Red;
+    } else {
+      leds[0] = CRGB::Black;
+    }
+    FastLED.show();
+  }
 }
 
 void loop() {

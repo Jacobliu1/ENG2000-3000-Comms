@@ -50,7 +50,7 @@ def listen_Carriage():
 
 def handle_message_fromMCP(json_data):
     # Extract fields from the JSON data
-    statusToSend = ""
+
 
     client_type = json_data.get("client_type")
     message = json_data.get("message")
@@ -61,26 +61,33 @@ def handle_message_fromMCP(json_data):
     br_id = json_data.get("br_id")
 
     if client_id != "BR01":
-        statusToSend = "ERR"
+        response = {
+            "client_type": "CCP",
+            "message": "STAT",
+            "client_id": client_id,
+            "sequence_number": "s_ccp",
+            "status": "ERR"
+        }
+        send_response_toMCP(response)
+        
 
     # intial message
     if message == "AKIN":
-        print("Successful Connection, Begin Running")
+        send_response_toCarriage("START") # start function for BR
     
     elif message == "STRQ":
-        send_response_toCarriage("STRQ")
+        send_response_toCarriage("STRQ") # status request
     
     elif message == "EXEC":
-        send_response_toCarriage("EXEC")
+        send_response_toCarriage("EXEC") #IDK
 
     elif message == "AKST":
-        print("status acknowledgement recieved")
+        print("status acknowledgement recieved, MCP connected")
 
         
 def handle_message_fromCarriage(data):
     #extract string
-    num = 0
-    currentStatus = Status[num]
+
     if data == "AKIN":
         response = {
             "client_type": "CCP",
@@ -89,27 +96,27 @@ def handle_message_fromCarriage(data):
             "sequence_number": sequence_number+1
         }
         send_response_toMCP(response)
-
-    elif data == "STAT":
+        print("Successful Connection, Begin Running")
         
+    else:
         response = {
             "client_type": "CCP",
             "message": "STAT",
             "client_id": "BR01",
             "sequence_number": sequence_number+1,
-            "status": currentStatus
+            "status": data
         }
+        send_response_toMCP(response)
     
 
-
-
-    
-    
 def send_response_toMCP(response):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
     response_json = json.dumps(response).encode('utf-8')  # Convert the response to JSON bytes
-    sock.sendto(response_json, (UDP_IP, UDP_PORT))  # Send response to specified IP and port
-    print(f"Sent response to {UDP_IP}:{UDP_PORT}: {response}")
+    try:
+        sock.sendto(response_json, (UDP_IP, UDP_PORT))  # Send response to specified IP and port
+        print(f"Sent response to MCP")
+    except Exception as e:
+        print(f"An error occured while sending data: {e}")
 
 def send_response_toCarriage(data):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
@@ -119,12 +126,19 @@ def send_response_toCarriage(data):
     
     try:
         sock.sendto(data, (SEND_IP, SEND_PORT))  # Send the data to the specified IP and port
-        print(f"Sent data to {SEND_IP}:{SEND_PORT}")
+        print(f"Sent data to Carriage")
     except Exception as e:
         print(f"An error occurred while sending data: {e}")
 
 
 if __name__ == "__main__":
+    
+    first = True
+    
+    if(first):
+        send_response_toCarriage("AKIN")
+        first = False
+
     listen_from_MCP = threading.Thread(target=listen_MCP, daemon=True)
     listen_from_Carriage = threading.Thread(target=listen_Carriage, daemon=True)
 

@@ -60,63 +60,40 @@ void setup() {
 void setMotor(int direction, int PWM_Value) { 
 
   if (direction == 1) {  // Forward direction
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, LOW);
-  } else {  // Reverse direction
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, HIGH);
+    runMotor(PWM_Value)
+  } else if (direction == 0){
+    runMotor (0)
+  } else { // Reverse direction
+   runMotor(-(PWM_Value))
   }
-  analogWrite(Motor_Driver_PWM, PWM_Value);
+  
 }
 
 void Handle_Encoder() {
-  if (digitalRead(Encoder_A_Out) > digitalRead(Encoder_B_Out)) {
-    encoderCount++;
-  } else {
-    encoderCount--;
-  }
-
+ // code Motions will provide
 }
-void calculateDirectionalRPM(){ // wrong code
-    Input = (encoderCount * 60.0) / Encoder_Pulse_per_revolution;
-
-    Serial.print("RPM OF MOTOR = ");
-    Serial.println(Input);
-
-    // Run PID control
-    myPID.Compute();
-    
-    // Set motor speed using PID output
-    setMotor(1, Output);
-
-      if (encoderCount > 0) {
-        Serial.print("Direction of motor is ANTI CLOCKWISE ");
-        Serial.print("      ----->");
-      } else if (encoderCount < 0) {
-        Serial.print("Direction of motor is CLOCKWISE ");
-        Serial.print("      ----->");
-      } else {
-        Serial.print("MOTOR DOESNOT MOVE! ");
-        Serial.print("      ----->");
-      }
-    encoderCount = 0;
+void runMotor(speed){
+ //code Motions will provide
 }
-
 
 // Function to accelerate motor (for simplicity, a placeholder)
 void accelerate() {
-   setPoint = 40.0;
-   myPID.Compute();
-   setMotor(1,setPoint);
+  runMotor(5)
+  runMotor(10)
+  runMotor(15)
+  runMotor(20)
+  runMotor(30)
 }
 
 // Function to decelerate motor (for simplicity, a placeholder)
 void decelerate() {
-   setPoint = 0.0;
-   myPID.Compute();
-   setMotor(1,setPoint);
+  
+  runMotor(30)
+  runMotor(20)
+  runMotor(15)
+  runMotor(10)
+  runMotor(5)
 }
-
 
 void loop() {
   unsigned long currentMillis = millis();
@@ -137,7 +114,7 @@ void loop() {
       decelerate();
     }
 
-    myPID.Compute();
+    myPID.Compute(); // Motions code (PID for speed)
     setMotor(1,Output);
   }
 

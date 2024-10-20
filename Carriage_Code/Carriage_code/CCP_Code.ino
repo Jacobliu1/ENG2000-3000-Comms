@@ -12,7 +12,8 @@
 #define LED_Pin 2
 volatile long encoderCount = 0;    // To count the encoder pulses
 long previousEncoderCount = 0;     // To store the previous encoder count
-unsigned long previousMillis = 0;  // To store the previous time
+// no more time
+
 
 const long interval = 1000;        // Time interval to calculate RPM (1 second)
 double setPoint = 80.0;   // Target RPM / what RPM to set into 
@@ -23,9 +24,8 @@ double Kp = 0.265, Ki = 0.125, Kd = 0.125;
 PID myPID(&Input, &Output, &setPoint, Kp, Ki, Kd, DIRECT);
 
 const char ssid [] = "Macquarie OneNet";
-const char password [] = "skibidi password name";
+const char password [] = ""
 
-unsigned long timeFreeze = 0;
 
 void setup() {
   
@@ -110,7 +110,7 @@ void loop() {
     if(currentMillis <= timeFreeze+5000 && currentMillis < 30000)
       accelerate();
 
-    if(currentMillis >= 25000){
+    if(currentMillis >= 25000){ 
       decelerate();
     }
 

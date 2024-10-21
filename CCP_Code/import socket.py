@@ -10,16 +10,11 @@ SEND_PORT = 3001     # Port to send messages to Bladerunner
 
 Status = ["STOPC", "STOPO", "FSLOWC", "FFASTC", "RSLOWC", "ERR", "OFLN"]
 
-client_type = ""
-client_id = ""
-sequence_number = ""
-action = ""
-status = ""
-br_id = ""
+sequence_number = 0;
 
 # Function to listen for UDP packets and handle JSON data
 def listen_MCP():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet, UDP
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Internet, UDP
     sock.bind((UDP_IP, UDP_PORT))  # Bind to specified IP and port
     print("Listening for MCP packets")
     
@@ -74,6 +69,7 @@ def handle_message_fromMCP(json_data):
     # intial message
     if message == "AKIN":
         send_response_toCarriage("START") # start function for BR
+        print(f"Acknowledgement accepted")
     
     elif message == "STRQ":
         send_response_toCarriage("STRQ") # status request
@@ -126,7 +122,7 @@ def send_response_toCarriage(data):
     
     try:
         sock.sendto(data, (SEND_IP, SEND_PORT))  # Send the data to the specified IP and port
-        print(f"Sent data to Carriage")
+        print("Sent data to Carriage")
     except Exception as e:
         print(f"An error occurred while sending data: {e}")
 
@@ -136,11 +132,12 @@ if __name__ == "__main__":
     first = True
     
     if(first):
-        send_response_toCarriage("AKIN")
+        handle_message_fromCarriage("AKIN")
         first = False
 
-    listen_from_MCP = threading.Thread(target=listen_MCP, daemon=True)
-    listen_from_Carriage = threading.Thread(target=listen_Carriage, daemon=True)
+    
+    listen_from_MCP = threading.Thread(target = listen_MCP, daemon=False)
+    listen_from_Carriage = threading.Thread(target=listen_Carriage, daemon=False)
 
     listen_from_MCP.start()
     listen_from_Carriage.start()

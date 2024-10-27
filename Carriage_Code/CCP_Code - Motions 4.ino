@@ -229,7 +229,7 @@ void surrounding_sensor(){
   }
 }
 void loop() {
-  unsigned long currentMillis = millis();
+  
   photo_sensor();
   surrounding_sensor();
 }
